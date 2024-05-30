@@ -18,6 +18,9 @@ import time
 # 注意 pyinstaller 在全局环境中的冲突问题
 ##
 class AppDelegate(NSObject):
+    def __init__(self):
+        self.fetch_error_count = None
+
     def applicationDidFinishLaunching_(self, notification):
         # 创建状态栏图标
         self.statusBar = NSStatusBar.systemStatusBar()
@@ -83,12 +86,13 @@ class AppDelegate(NSObject):
             raise Exception("Token not found in response")
         self.session = session
         self.token = token
-        self.token_expiry = time.time() + 300  # 假设 token 有效期为 5 分钟
+        self.token_expiry = time.time() + 1800  # 假设 token 有效期为 30 分钟
+        self.fetch_error_count = 0
 
     @objc.python_method
     def fetch_signal_info(self):
         try:
-            if not hasattr(self, 'token') or time.time() >= self.token_expiry:
+            if not hasattr(self, 'token') or time.time() >= self.token_expiry and self.fetch_error_count > 3:
                 self.login_and_get_token()
             signal_info_url = "http://192.168.1.1/jsonp_internet_info?callback=jsonp_callback"
             signal_response = self.session.get(signal_info_url, cookies={'token': self.token}, verify=False)
@@ -115,30 +119,38 @@ class AppDelegate(NSObject):
                 'networkType': root.find('networkType').text,
                 'imei': root.find('imei').text
             }
+            self.fetch_error_count = 0
             return signal_info
         except Exception as e:
+            self.fetch_error_count = getattr(self, 'fetch_error_count', 0) + 1
             print(f"Error fetching signal info: {e}")
             return None
 
     @objc.python_method
     def fetch_sys_info(self):
         try:
+            if not hasattr(self, 'token') or time.time() >= self.token_expiry and self.fetch_error_count > 3:
+                self.login_and_get_token()
             sys_info_url = "http://192.168.1.1:8080/api/get/sysinfo"
             sys_response = requests.get(sys_info_url, verify=False)
             if sys_response.status_code != 200:
+                self.fetch_error_count = getattr(self, 'fetch_error_count', 0) + 1
                 raise Exception("Failed to fetch system info")
             sys_info = sys_response.json()
             if sys_info['Code'] != 0:
+                getattr(self, 'fetch_error_count', 0) + 1
                 raise Exception(f"Error in response: {sys_info['Error']}")
+            self.fetch_error_count = 0
             return sys_info['Data']
         except Exception as e:
+            self.fetch_error_count = getattr(self, 'fetch_error_count', 0) + 1
             print(f"Error fetching system info: {e}")
             return None
 
     @objc.python_method
     def fetch_device_info(self):
         try:
-            if not hasattr(self, 'token') or time.time() >= self.token_expiry:
+            if not hasattr(self, 'token') or time.time() >= self.token_expiry and self.fetch_error_count > 3:
                 self.login_and_get_token()
             device_info_url = "http://192.168.1.1/jsonp_sysinfo?callback=jsonp1717038353463&_=1717038388949"
             device_response = self.session.get(device_info_url, cookies={'token': self.token}, verify=False)
@@ -155,8 +167,10 @@ class AppDelegate(NSObject):
                 'availablememory': root.find('availablememory').text,
                 'totalmemory': root.find('totalmemory').text
             }
+            self.fetch_error_count = 0
             return device_info
         except Exception as e:
+            self.fetch_error_count = getattr(self, 'fetch_error_count', 0) + 1
             print(f"Error fetching device info: {e}")
             return None
 
