@@ -24,16 +24,16 @@ class AppDelegate(NSObject):
         self.menuRSRP = NSMenu.alloc().init()
         self.menuTemp = NSMenu.alloc().init()
 
-        self.refreshMenuItemRSRP = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Refresh", "refresh:", "")
-        self.refreshMenuItemTemp = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Refresh", "refresh:", "")
+        self.refreshMenuItemRSRP = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("刷新数据", "refresh:", "")
+        self.refreshMenuItemTemp = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("刷新数据", "refresh:", "")
         self.menuRSRP.addItem_(self.refreshMenuItemRSRP)
         self.menuTemp.addItem_(self.refreshMenuItemTemp)
 
         self.menuRSRP.addItem_(NSMenuItem.separatorItem())
         self.menuTemp.addItem_(NSMenuItem.separatorItem())
 
-        self.quitMenuItemRSRP = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Quit", "terminate:", "")
-        self.quitMenuItemTemp = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("Quit", "terminate:", "")
+        self.quitMenuItemRSRP = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("退出程序", "terminate:", "")
+        self.quitMenuItemTemp = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("退出程序", "terminate:", "")
         self.menuRSRP.addItem_(self.quitMenuItemRSRP)
         self.menuTemp.addItem_(self.quitMenuItemTemp)
 
