@@ -12,7 +12,7 @@
 ![iShot_2024-05-30_16.49.12.png](media%2FiShot_2024-05-30_16.49.12.png)
 
 ## 下载使用
-[下载地址](https://github.com/lvusyy/5GNetBar/releases/tag/v1.0.8.3)
+[下载地址](https://github.com/lvusyy/5GNetBar/releases/latest)
 > 注意: 下载后需要解压,然后将解压后的文件拖到桌面上打开一次后就可以正常使用了,注意先退出(退出的话点击Quit即可).
  
 >如果想放到*应用中心*就要用*访达*,从桌面把"5GNetBar"拖拽到"应用程序"里面即可.
@@ -61,7 +61,7 @@ pyinstaller --name 5GNetBar --hidden-import=requests --hidden-import=Foundation 
 block_cipher = None
 
 a = Analysis(['5GNetBar_app.py'],
-             pathex=['/Users/duncanzat/PycharmProjects/5GNetBar'],
+             pathex=['.'],
              binaries=[],
              datas=[],
              hiddenimports=['requests', 'Foundation', 'AppKit', 'objc'],
@@ -98,7 +98,7 @@ coll = COLLECT(exe,
 
 app = BUNDLE(coll,
              name='5GNetBar.app',
-             icon='/Users/duncanzat/PycharmProjects/5GNetBar/Myicon.icns',
+             icon='Myicon.icns',
              bundle_identifier=None)
 ```
 ### icns文件生成
