@@ -1,0 +1,67 @@
+name: "Build and Release"
+
+on:
+  push:
+    tags:
+        - "v*.**" # Push events to matching v*.* tags
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - name: "Checkout code"
+      uses: actions/checkout@v4
+    - name: "Set up Python"
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: "Install dependencies"
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: "Build with PyInstaller"
+      run: |
+        pyinstaller 5GNetBar_app.spec
+
+    - name: "Upload artifact"
+      uses: actions/upload-artifact@v4
+      with:
+          name: 5GNetBar
+          path: dist/5GNetBar
+
+  release:
+    needs: build
+    runs-on: macos-latest
+    steps:
+    - name: "Download artifact"
+      uses: actions/download-artifact@v4
+      with:
+          name: 5GNetBar
+          path: dist/5GNetBar
+    - name: "Create release"
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          Changes in this Release
+          - First release
+        draft: false
+        prerelease: false
+    - name: "Upload release asset"
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/5GNetBar
+          asset_name: 5GNetBar
+          asset_content_type: application/octet-stream
