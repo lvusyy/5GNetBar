@@ -61,6 +61,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
       with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/5GNetBar
+          asset_path: dist/5GNetBar/5GNetBar
           asset_name: 5GNetBar
           asset_content_type: application/octet-stream
