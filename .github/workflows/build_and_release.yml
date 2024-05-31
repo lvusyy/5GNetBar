@@ -41,7 +41,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
           name: 5GNetBar.app
-          path: dist/5GNetBar.app
+          path: dist
 
     - name: "Create release"
       id: create_release
