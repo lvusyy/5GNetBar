@@ -39,7 +39,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
           name: 5GNetBar.zip # Name of the artifact
-          path: dist/5GNetBar.zip
+          path: dist/5GNetBar.zip #file or directory to upload
 
   release:
     needs: build
