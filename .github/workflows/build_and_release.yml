@@ -30,11 +30,16 @@ jobs:
     - name: Check generated file
       run: ls -l dist/
 
+    - name: "Compress .app to .zip"
+      run: |
+        cd dist
+        zip -r 5GNetBar.zip 5GNetBar.app
+
     - name: "Upload artifact"
       uses: actions/upload-artifact@v4
       with:
           name: 5GNetBar.app
-          path: dist/
+          path: dist/5GNetBar.app
 
   release:
     needs: build
@@ -48,10 +53,7 @@ jobs:
 
     - name: Check generated file
       run: |
-        ls -l dist/
-        ls -l dist/5GNetBar.app/
-      
-
+        ls -l dist/      
 
     - name: "Create release"
       id: create_release
@@ -71,6 +73,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
       with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/5GNetBar.app/5GNetBar.app
-          asset_name: 5GNetBar.app
-          asset_content_type: application/octet-stream
+          asset_path: dist/5GNetBar.zip
+          asset_name: 5GNetBar.zip
+          asset_content_type: application/zip
