@@ -49,7 +49,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
           name: 5GNetBar.app
-          path: dist/
+          path: dist/5GNetBar.app
 
     - name: Check generated file
       run: |
