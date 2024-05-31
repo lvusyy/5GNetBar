@@ -17,10 +17,9 @@ class AppDelegate(NSObject):
 
     def applicationDidFinishLaunching_(self, notification):
         self.statusBar = NSStatusBar.systemStatusBar()
-        # 这里的长度设置为-1，表示自适应; 先创建的在右边
-        self.statusItemTemp = self.statusBar.statusItemWithLength_(-1)
+        # 先添加RSRP状态栏项目
         self.statusItemRSRP = self.statusBar.statusItemWithLength_(-1)
-
+        self.statusItemTemp = self.statusBar.statusItemWithLength_(-1)
 
         self.menuRSRP = NSMenu.alloc().init()
         self.menuTemp = NSMenu.alloc().init()
@@ -209,7 +208,7 @@ class AppDelegate(NSObject):
         if not self.display_temp:
             if cpu_temp[0] / 1000 < 45 and battery_temp / 10 < 40:
                 return NSColor.colorWithCalibratedRed_green_blue_alpha_(0.0, 0.8, 0.0, 0.8)  # 浅绿色
-            elif 55 > cpu_temp[0] / 1000 >= 45 > battery_temp / 10 >= 42:
+            elif 55 > cpu_temp[0] / 1000 >= 45 or 42 <= battery_temp / 10 < 55:
                 return NSColor.colorWithCalibratedRed_green_blue_alpha_(0.8, 0.5, 0.0, 0.9)  # 浅黄色
             else:
                 return NSColor.colorWithCalibratedRed_green_blue_alpha_(1.0, 0.0, 0.0, 0.8)  # 浅红色
@@ -252,6 +251,8 @@ class AppDelegate(NSObject):
         for key, value in sys_info.items():
             menuItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(f"{key}: {value}", None, "")
             self.menuTemp.addItem_(menuItem)
+
+        self.menuTemp.addItem_(NSMenuItem.separatorItem())
 
         for key, value in device_info.items():
             menuItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(f"{key}: {value}", None, "")
