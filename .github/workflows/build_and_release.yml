@@ -27,6 +27,9 @@ jobs:
       run: |
         pyinstaller 5GNetBar_app.spec
 
+    - name: Check generated file
+      run: ls -l dist/
+
     - name: "Upload artifact"
       uses: actions/upload-artifact@v4
       with:
@@ -42,6 +45,10 @@ jobs:
       with:
           name: 5GNetBar.app
           path: dist
+
+    - name: Check generated file
+      run: ls -l dist/
+
 
     - name: "Create release"
       id: create_release
