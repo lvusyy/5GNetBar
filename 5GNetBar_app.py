@@ -1,7 +1,7 @@
 import requests
 import xml.etree.ElementTree as ET
 import re
-from Foundation import NSObject, NSTimer
+from Foundation import NSObject, NSTimer, NSNotificationCenter, NSWorkspace
 from AppKit import NSApplication, NSStatusBar, NSMenu, NSMenuItem, NSFont, NSAttributedString, NSColor, \
     NSMutableParagraphStyle, NSFontAttributeName, NSForegroundColorAttributeName, NSBaselineOffsetAttributeName, \
     NSParagraphStyleAttributeName
@@ -17,7 +17,6 @@ class AppDelegate(NSObject):
 
     def applicationDidFinishLaunching_(self, notification):
         self.statusBar = NSStatusBar.systemStatusBar()
-        # 先添加RSRP状态栏项目
         self.statusItemRSRP = self.statusBar.statusItemWithLength_(-1)
         self.statusItemTemp = self.statusBar.statusItemWithLength_(-1)
 
@@ -44,8 +43,31 @@ class AppDelegate(NSObject):
 
         self.refresh_(None)
 
+        self.start_timer()
+
+        # 监听系统睡眠和唤醒通知
+        self.notification_center = NSWorkspace.sharedWorkspace().notificationCenter()
+        self.notification_center.addObserver_selector_name_object_(
+            self, objc.selector(self.will_sleep_, signature='v@:@'), 'NSWorkspaceWillSleepNotification', None)
+        self.notification_center.addObserver_selector_name_object_(
+            self, objc.selector(self.did_wake_, signature='v@:@'), 'NSWorkspaceDidWakeNotification', None)
+
+    def start_timer(self):
         self.timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
             3.0, self, 'refresh:', None, True)
+
+    def stop_timer(self):
+        if self.timer:
+            self.timer.invalidate()
+            self.timer = None
+
+    def will_sleep_(self, notification):
+        # 系统进入睡眠时停止定时器
+        self.stop_timer()
+
+    def did_wake_(self, notification):
+        # 系统唤醒时重新启动定时器
+        self.start_timer()
 
     @objc.python_method
     def login_and_get_token(self):
@@ -185,7 +207,7 @@ class AppDelegate(NSObject):
         color_rsrp = self.get_color_rsrp(rsrp)
         color_temp = self.get_color_temp(cpu_temp, battery_temp, cpu_usage, available_mem, total_mem)
 
-        attributes_rsrp = self.get_attributes(font, color_rsrp)
+        attributes_rsrp = self.get_attributes(font,color_rsrp)
         attributes_temp = self.get_attributes(font, color_temp)
 
         attributedTitleRSRP = NSAttributedString.alloc().initWithString_attributes_(title_rsrp_rsrq, attributes_rsrp)
@@ -251,8 +273,6 @@ class AppDelegate(NSObject):
         for key, value in sys_info.items():
             menuItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(f"{key}: {value}", None, "")
             self.menuTemp.addItem_(menuItem)
-
-        self.menuTemp.addItem_(NSMenuItem.separatorItem())
 
         for key, value in device_info.items():
             menuItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(f"{key}: {value}", None, "")
