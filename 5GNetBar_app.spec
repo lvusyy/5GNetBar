@@ -3,7 +3,7 @@
 block_cipher = None
 
 a = Analysis(['5GNetBar_app.py'],
-             pathex=['/Users/duncanzat/PycharmProjects/5GNetBar'],
+             pathex=['.'],
              binaries=[],
              datas=[],
              hiddenimports=['requests', 'Foundation', 'AppKit', 'objc'],
@@ -40,5 +40,5 @@ coll = COLLECT(exe,
 
 app = BUNDLE(coll,
              name='5GNetBar.app',
-             icon='/Users/duncanzat/PycharmProjects/5GNetBar/Myicon.icns',
+             icon='Myicon.icns',
              bundle_identifier=None)
