@@ -38,7 +38,7 @@ jobs:
     - name: "Upload artifact"
       uses: actions/upload-artifact@v4
       with:
-          name: 5GNetBar.zip
+          name: 5GNetBar.zip # Name of the artifact
           path: dist/5GNetBar.zip
 
   release:
@@ -48,8 +48,8 @@ jobs:
     - name: "Download artifact"
       uses: actions/download-artifact@v4
       with:
-          name: 5GNetBar.zip
-          path: dist/5GNetBar.zip
+          name: 5GNetBar.zip # Name of the artifact
+          path: dist/ # Path to download the artifact
 
     - name: Check generated file
       run: |
