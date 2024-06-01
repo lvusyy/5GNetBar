@@ -1,10 +1,10 @@
 import requests
 import xml.etree.ElementTree as ET
 import re
-from Foundation import NSObject, NSTimer, NSNotificationCenter, NSWorkspace
+from Foundation import NSObject, NSTimer
 from AppKit import NSApplication, NSStatusBar, NSMenu, NSMenuItem, NSFont, NSAttributedString, NSColor, \
     NSMutableParagraphStyle, NSFontAttributeName, NSForegroundColorAttributeName, NSBaselineOffsetAttributeName, \
-    NSParagraphStyleAttributeName
+    NSParagraphStyleAttributeName, NSWorkspace,NSPasteboard,NSPasteboardTypeString
 import objc
 import threading
 import json
@@ -48,9 +48,9 @@ class AppDelegate(NSObject):
         # 监听系统睡眠和唤醒通知
         self.notification_center = NSWorkspace.sharedWorkspace().notificationCenter()
         self.notification_center.addObserver_selector_name_object_(
-            self, objc.selector(self.will_sleep_, signature='v@:@'), 'NSWorkspaceWillSleepNotification', None)
+            self, objc.selector(self.will_sleep_, signature='v@:@@'), 'NSWorkspaceWillSleepNotification', None)
         self.notification_center.addObserver_selector_name_object_(
-            self, objc.selector(self.did_wake_, signature='v@:@'), 'NSWorkspaceDidWakeNotification', None)
+            self, objc.selector(self.did_wake_, signature='v@:@@'), 'NSWorkspaceDidWakeNotification', None)
 
     def start_timer(self):
         self.timer = NSTimer.scheduledTimerWithTimeInterval_target_selector_userInfo_repeats_(
@@ -61,20 +61,22 @@ class AppDelegate(NSObject):
             self.timer.invalidate()
             self.timer = None
 
-    def will_sleep_(self, notification):
+    def will_sleep_(self, notification, event):
         # 系统进入睡眠时停止定时器
         self.stop_timer()
 
-    def did_wake_(self, notification):
+    def did_wake_(self, notification, event):
         # 系统唤醒时重新启动定时器
         self.start_timer()
 
     @objc.python_method
     def login_and_get_token(self):
         session = requests.Session()
+        timestamp = str(int(time.time() * 1000))
+
         login_url = "http://192.168.1.1/adminLogin"
         login_params = {
-            "callback": "jsonp1717028694845",
+            "callback": f"jsonp{timestamp}",
             "_": str(int(time.time() * 1000)),
             "loginparam": json.dumps({
                 "username": "admin",
@@ -85,7 +87,7 @@ class AppDelegate(NSObject):
         login_response.raise_for_status()
 
         login_response_text = login_response.text
-        match = re.search(r'jsonp1717028694845\("(<blog>.*)</blog>"\)', login_response_text)
+        match = re.search(f'jsonp{timestamp}'+r'\("(<blog>.*)</blog>"\)', login_response_text)
         if not match:
             raise ValueError("Invalid JSONP response")
 
@@ -155,12 +157,13 @@ class AppDelegate(NSObject):
             self.login_and_get_token()
 
         try:
-            device_info_url = "http://192.168.1.1/jsonp_sysinfo?callback=jsonp1717038353463&_=1717038388949"
+            timestamp = str(int(time.time() * 1000))
+            device_info_url = f"http://192.168.1.1/jsonp_sysinfo?callback=jsonp{timestamp}&_={int(timestamp)+220000}"
             device_response = self.session.get(device_info_url, cookies={'token': self.token}, verify=False)
             device_response.raise_for_status()
 
             response_text = device_response.text
-            match = re.search(r'jsonp1717038353463\((.*)\)', response_text)
+            match = re.search(f'jsonp{timestamp}'+r'\((.*)\)', response_text)
             if not match:
                 raise ValueError("Invalid JSONP response")
 
@@ -207,14 +210,13 @@ class AppDelegate(NSObject):
         color_rsrp = self.get_color_rsrp(rsrp)
         color_temp = self.get_color_temp(cpu_temp, battery_temp, cpu_usage, available_mem, total_mem)
 
-        attributes_rsrp = self.get_attributes(font,color_rsrp)
+        attributes_rsrp = self.get_attributes(font, color_rsrp)
         attributes_temp = self.get_attributes(font, color_temp)
 
         attributedTitleRSRP = NSAttributedString.alloc().initWithString_attributes_(title_rsrp_rsrq, attributes_rsrp)
         attributedTitleTemp = NSAttributedString.alloc().initWithString_attributes_(title_temp, attributes_temp)
 
-        self.performSelectorOnMainThread_withObject_waitUntilDone_('updateMenuItems:', (
-            attributedTitleRSRP, attributedTitleTemp, signal_info, sys_info, device_info), False)
+        self.performSelectorOnMainThread_withObject_waitUntilDone_('updateMenuItems:', (attributedTitleRSRP, attributedTitleTemp, signal_info, sys_info, device_info), False)
 
     @objc.python_method
     def get_color_rsrp(self, rsrp):
@@ -267,21 +269,31 @@ class AppDelegate(NSObject):
         self.menuTemp.addItem_(NSMenuItem.separatorItem())
 
         for key, value in signal_info.items():
-            menuItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(f"{key}: {value}", None, "")
+            menuItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(f"{key}: {value}", "copyItem:", "")
+            menuItem.setRepresentedObject_(f"{key}: {value}")
             self.menuRSRP.addItem_(menuItem)
 
         for key, value in sys_info.items():
-            menuItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(f"{key}: {value}", None, "")
+            menuItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(f"{key}: {value}", "copyItem:", "")
+            menuItem.setRepresentedObject_(f"{key}: {value}")
             self.menuTemp.addItem_(menuItem)
 
+        self.menuTemp.addItem_(NSMenuItem.separatorItem())
+
         for key, value in device_info.items():
-            menuItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(f"{key}: {value}", None, "")
+            menuItem = NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(f"{key}: {value}", "copyItem:", "")
+            menuItem.setRepresentedObject_(f"{key}: {value}")
             self.menuTemp.addItem_(menuItem)
 
         self.menuRSRP.addItem_(NSMenuItem.separatorItem())
         self.menuTemp.addItem_(NSMenuItem.separatorItem())
         self.menuRSRP.addItem_(self.quitMenuItemRSRP)
         self.menuTemp.addItem_(self.quitMenuItemTemp)
+
+    def copyItem_(self, sender):
+        pboard = NSPasteboard.generalPasteboard()
+        pboard.clearContents()
+        pboard.setString_forType_(sender.representedObject(), NSPasteboardTypeString)
 
 
 if __name__ == "__main__":
