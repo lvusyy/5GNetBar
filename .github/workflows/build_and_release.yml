@@ -52,9 +52,11 @@ jobs:
           path: dist/ # Path to download the artifact
 
     - name: Check generated file
+      shell: bash
       run: |
         ls -l dist/      
         VERSION=${GITHUB_REF#refs/tags/}
+        echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
     - name: "Create release"
       id: create_release
@@ -75,5 +77,5 @@ jobs:
       with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: dist/5GNetBar.zip #file to upload
-          asset_name: 5GNetBar_$VERSION.zip #name of the asset
+          asset_name: 5GNetBar_${{ env.VERSION }}.zip #name of the asset
           asset_content_type: application/zip
