@@ -69,6 +69,12 @@ class AppDelegate(NSObject):
         # 系统唤醒时重新启动定时器
         self.start_timer()
 
+    def parse_respose_status(self,response):
+        if response.status_code < 400:
+            return True
+        else:
+            return False
+
     @objc.python_method
     def login_and_get_token(self):
         session = requests.Session()
@@ -83,7 +89,7 @@ class AppDelegate(NSObject):
                 "password": "admin"
             })
         }
-        login_response = session.get(login_url, params=login_params, timeout=3,verify=False)
+        login_response = session.get(login_url, params=login_params, timeout=5,verify=False)
         login_response.raise_for_status()
 
         login_response_text = login_response.text
@@ -114,7 +120,8 @@ class AppDelegate(NSObject):
             signal_info_url = "http://192.168.1.1/jsonp_internet_info?callback=jsonp_callback"
             signal_response = self.session.get(signal_info_url, cookies={'token': self.token},timeout=3 ,verify=False)
             signal_response.raise_for_status()
-
+            if not self.parse_respose_status(signal_response):
+                raise Exception("Error in response, msg:{}".format(signal_response.text))
             response_text = signal_response.text
             match = re.search(r'jsonp_callback\((.*)\)', response_text)
             if not match:
@@ -139,7 +146,8 @@ class AppDelegate(NSObject):
             sys_info_url = "http://192.168.1.1:8080/api/get/sysinfo"
             sys_response = requests.get(sys_info_url,timeout=3, verify=False)
             sys_response.raise_for_status()
-
+            if not self.parse_respose_status(sys_response):
+                raise Exception("Error in response, msg:{}".format(sys_response.text))
             sys_info = sys_response.json()
             if sys_info['Code'] != 0:
                 raise Exception(f"Error in response: {sys_info['Error']}")
@@ -161,6 +169,9 @@ class AppDelegate(NSObject):
             device_info_url = f"http://192.168.1.1/jsonp_sysinfo?callback=jsonp{timestamp}&_={int(timestamp)+220000}"
             device_response = self.session.get(device_info_url, cookies={'token': self.token},timeout=3, verify=False)
             device_response.raise_for_status()
+
+            if not self.parse_respose_status(device_response):
+                raise Exception("Error in response, msg:{}".format(device_response.text))
 
             response_text = device_response.text
             match = re.search(f'jsonp{timestamp}'+r'\((.*)\)', response_text)
