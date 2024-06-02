@@ -12,8 +12,7 @@ import time
 
 
 class AppDelegate(NSObject):
-    def __init__(self):
-        self.fetch_error_count = 0
+    fetch_error_count = 0
 
     def applicationDidFinishLaunching_(self, notification):
         self.statusBar = NSStatusBar.systemStatusBar()
@@ -89,6 +88,9 @@ class AppDelegate(NSObject):
                 "password": "admin"
             })
         }
+
+        print("******** ready to login ********")
+
         login_response = session.get(login_url, params=login_params, timeout=5,verify=False)
         login_response.raise_for_status()
 
@@ -113,7 +115,7 @@ class AppDelegate(NSObject):
 
     @objc.python_method
     def fetch_signal_info(self):
-        if not hasattr(self, 'token') or time.time() >= self.token_expiry and self.fetch_error_count > 3:
+        if self.fetch_error_count > 3 or not hasattr(self, 'token') or time.time() >= self.token_expiry  :
             self.login_and_get_token()
 
         try:
@@ -139,8 +141,8 @@ class AppDelegate(NSObject):
 
     @objc.python_method
     def fetch_sys_info(self):
-        if not hasattr(self, 'token') or time.time() >= self.token_expiry and self.fetch_error_count > 3:
-            self.login_and_get_token()
+        # if not hasattr(self, 'token') or time.time() >= self.token_expiry or self.fetch_error_count > 3:
+        #     self.login_and_get_token()
 
         try:
             sys_info_url = "http://192.168.1.1:8080/api/get/sysinfo"
@@ -152,16 +154,14 @@ class AppDelegate(NSObject):
             if sys_info['Code'] != 0:
                 raise Exception(f"Error in response: {sys_info['Error']}")
 
-            self.fetch_error_count = 0
             return sys_info['Data']
         except Exception as e:
-            self.fetch_error_count += 1
             print(f"Error fetching system info: {e}")
             return None
 
     @objc.python_method
     def fetch_device_info(self):
-        if not hasattr(self, 'token') or time.time() >= self.token_expiry and self.fetch_error_count > 3:
+        if not hasattr(self, 'token') or time.time() >= self.token_expiry or self.fetch_error_count > 3:
             self.login_and_get_token()
 
         try:
