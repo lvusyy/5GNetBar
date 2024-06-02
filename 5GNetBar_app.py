@@ -83,7 +83,7 @@ class AppDelegate(NSObject):
                 "password": "admin"
             })
         }
-        login_response = session.get(login_url, params=login_params, verify=False)
+        login_response = session.get(login_url, params=login_params, timeout=3,verify=False)
         login_response.raise_for_status()
 
         login_response_text = login_response.text
@@ -112,7 +112,7 @@ class AppDelegate(NSObject):
 
         try:
             signal_info_url = "http://192.168.1.1/jsonp_internet_info?callback=jsonp_callback"
-            signal_response = self.session.get(signal_info_url, cookies={'token': self.token}, verify=False)
+            signal_response = self.session.get(signal_info_url, cookies={'token': self.token},timeout=3 ,verify=False)
             signal_response.raise_for_status()
 
             response_text = signal_response.text
@@ -137,7 +137,7 @@ class AppDelegate(NSObject):
 
         try:
             sys_info_url = "http://192.168.1.1:8080/api/get/sysinfo"
-            sys_response = requests.get(sys_info_url, verify=False)
+            sys_response = requests.get(sys_info_url,timeout=3, verify=False)
             sys_response.raise_for_status()
 
             sys_info = sys_response.json()
@@ -159,7 +159,7 @@ class AppDelegate(NSObject):
         try:
             timestamp = str(int(time.time() * 1000))
             device_info_url = f"http://192.168.1.1/jsonp_sysinfo?callback=jsonp{timestamp}&_={int(timestamp)+220000}"
-            device_response = self.session.get(device_info_url, cookies={'token': self.token}, verify=False)
+            device_response = self.session.get(device_info_url, cookies={'token': self.token},timeout=3, verify=False)
             device_response.raise_for_status()
 
             response_text = device_response.text
